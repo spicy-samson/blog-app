@@ -18,9 +18,25 @@
 			"binding": "DB",
 			"database_name": "d1-example",
 			"database_id": "5b8c8cc7-6f4e-4e42-9f7a-95c1687b3130",
-			"remote": true,
+			"remote": false,
 		}
-	]
+	],
+	"env": {
+		"nightly": {
+			"name": "blog-app-nightly",
+			"vars": {
+				
+			},
+			"d1_databases": [
+					{
+						"binding": "DB",
+						"database_name": "d1-example-nightly",
+						"database_id": "cc4b5e5d-73e3-4aaf-90e3-57fa2838426a"
+					}
+				],
+			
+		}
+	},
 	/**
 	 * Smart Placement
 	 * https://developers.cloudflare.com/workers/configuration/smart-placement/#smart-placement
