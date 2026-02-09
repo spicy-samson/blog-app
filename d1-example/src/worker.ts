@@ -1,14 +1,17 @@
 import { Hono } from "hono";
 import { cors } from "hono/cors";
+import { rpc } from "./rpc";
 
 type Env = {
   DB: D1Database;
 };
 
+export type AppType = typeof app;
+
 const app = new Hono<{ Bindings: Env }>();
 
 // Configure CORS to allow requests from your Pages domain
-app.use("/api/*", cors({
+app.use("/*", cors({
   origin: "*", // In production, you might want to restrict this to your Pages domain
   allowMethods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
   allowHeaders: ["Content-Type"],
@@ -16,60 +19,39 @@ app.use("/api/*", cors({
 
 app.get("/", (c) => c.text("Hello World"));
 
-// Get comments for a post
-app.get("/api/posts/:slug/comments", async (c) => {
+// ORPC endpoint - handles all RPC calls
+app.post("/rpc", async (c) => {
   try {
-    const { slug } = c.req.param();
-    
-    if (!c.env.DB) {
-      return c.json({ error: "Database not available" }, 500);
-    }
-
-    const { results } = await c.env.DB.prepare(
-      `SELECT id, author, body, post_slug, created_at FROM comments WHERE post_slug = ? ORDER BY id DESC`
-    )
-      .bind(slug)
-      .all();
-
-    return c.json(results || []);
-  } catch (error) {
-    console.error("Error fetching comments:", error);
-    return c.json({ error: "Failed to fetch comments", details: String(error) }, 500);
-  }
-});
-
-// Create a new comment
-app.post("/api/posts/:slug/comments", async (c) => {
-  try {
-    const { slug } = c.req.param();
     const body = await c.req.json();
-    const { author, body: commentBody } = body;
+    const { method, params } = body;
 
-    if (!c.env.DB) {
-      return c.json({ error: "Database not available" }, 500);
+    if (!method || typeof method !== 'string') {
+      return c.json({ error: "Invalid RPC request: method is required" }, 400);
     }
 
-    if (!author) {
-      return c.json({ error: "Missing author value for new comment" }, 400);
-    }
-    if (!commentBody) {
-      return c.json({ error: "Missing body value for new comment" }, 400);
+    // Route to the appropriate RPC procedure
+    if (method === 'comments.get') {
+      if (!params || !params.slug) {
+        return c.json({ error: "Invalid params: slug is required" }, 400);
+      }
+      const result = await rpc['comments.get'](c, params);
+      return c.json({ result });
     }
 
-    const { success, meta } = await c.env.DB.prepare(
-      `INSERT INTO comments (author, body, post_slug, created_at) VALUES (?, ?, ?, datetime('now'))`
-    )
-      .bind(author, commentBody, slug)
-      .run();
-
-    if (success) {
-      return c.json({ success: true, id: meta.last_row_id }, 201);
-    } else {
-      return c.json({ error: "Failed to create comment" }, 500);
+    if (method === 'comments.create') {
+      if (!params || !params.slug || !params.author || !params.body) {
+        return c.json({ error: "Invalid params: slug, author, and body are required" }, 400);
+      }
+      const result = await rpc['comments.create'](c, params);
+      return c.json({ result });
     }
+
+    return c.json({ error: `Unknown method: ${method}` }, 404);
   } catch (error) {
-    console.error("Error creating comment:", error);
-    return c.json({ error: "Failed to create comment", details: String(error) }, 500);
+    console.error("RPC error:", error);
+    return c.json({ 
+      error: error instanceof Error ? error.message : "Internal server error" 
+    }, 500);
   }
 });
 
