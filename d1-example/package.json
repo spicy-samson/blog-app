@@ -17,6 +17,8 @@
 		"wrangler": "^4.63.0"
 	},
 	"dependencies": {
+		"@orpc/client": "^1.13.4",
+		"@orpc/server": "^1.13.4",
 		"hono": "^4.11.9"
 	}
 }
