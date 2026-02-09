@@ -9,6 +9,7 @@
     "preview": "nuxt preview"
   },
   "dependencies": {
+    "@orpc/client": "^1.13.4",
     "nuxt": "^3.13.0"
   },
   "devDependencies": {
