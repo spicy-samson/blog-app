@@ -17,7 +17,8 @@
 		{
 			"binding": "DB",
 			"database_name": "d1-example",
-			"database_id": "5b8c8cc7-6f4e-4e42-9f7a-95c1687b3130"
+			"database_id": "5b8c8cc7-6f4e-4e42-9f7a-95c1687b3130",
+			"remote": true,
 		}
 	]
 	/**
