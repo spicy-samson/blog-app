@@ -1,3 +1,8 @@
+import { defineNuxtConfig } from 'nuxt/config'
+
+const env = (globalThis as any).process?.env ?? {}
+
+
 export default defineNuxtConfig({
   devtools: { enabled: true },
   app: {
@@ -11,7 +16,7 @@ export default defineNuxtConfig({
   },
   runtimeConfig: {
     public: {
-      apiUrl: process.env.API_URL || 'http://localhost:8787'
+       apiUrl: env.NUXT_PUBLIC_API_URL,
     }
   }
 })
