@@ -52,12 +52,14 @@
   </div>
 </template>
 
-<script setup>
-const config = useRuntimeConfig()
+<script setup lang="ts">
+import type { Comment } from '~/types/comment'
+
+const rpc = useRpc()
 const postSlug = ref('my-first-post')
-const comments = ref([])
+const comments = ref<Comment[]>([])
 const loading = ref(false)
-const error = ref(null)
+const error = ref<string | null>(null)
 const submitting = ref(false)
 
 const newComment = ref({
@@ -72,13 +74,10 @@ const loadComments = async () => {
   error.value = null
   
   try {
-    const response = await fetch(`${config.public.apiUrl}/api/posts/${postSlug.value}/comments`)
-    if (!response.ok) {
-      throw new Error('Failed to load comments')
-    }
-    comments.value = await response.json()
-  } catch (e) {
-    error.value = e.message
+    const result = await rpc.comments.get(postSlug.value)
+    comments.value = result || []
+  } catch (e: any) {
+    error.value = e.message || 'Failed to load comments'
     comments.value = []
   } finally {
     loading.value = false
@@ -94,33 +93,23 @@ const submitComment = async () => {
   submitting.value = true
   
   try {
-    const response = await fetch(`${config.public.apiUrl}/api/posts/${postSlug.value}/comments`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        author: newComment.value.author,
-        body: newComment.value.body
-      })
-    })
-    
-    if (!response.ok) {
-      const errorText = await response.text()
-      throw new Error(errorText || 'Failed to submit comment')
-    }
+    await rpc.comments.create(
+      postSlug.value,
+      newComment.value.author,
+      newComment.value.body
+    )
     
     // Clear form and reload comments
     newComment.value = { author: '', body: '' }
     await loadComments()
-  } catch (e) {
-    alert('Error: ' + e.message)
+  } catch (e: any) {
+    alert('Error: ' + (e.message || 'Failed to submit comment'))
   } finally {
     submitting.value = false
   }
 }
 
-const formatDate = (dateString) => {
+const formatDate = (dateString: string) => {
   if (!dateString) return ''
   const date = new Date(dateString)
   return date.toLocaleString()
