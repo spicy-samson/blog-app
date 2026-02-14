@@ -1,4 +1,5 @@
 // ORPC client composable for type-safe API calls
+import { useRuntimeConfig } from 'nuxt/app';
 import type { AppType } from '../../d1-example/src/worker';
 
 type RpcRequest = {
@@ -51,17 +52,35 @@ export const useRpc = () => {
   return {
     call,
     // Convenience methods
+    posts: {
+      getWithComments: (slug: string) =>
+        call<{
+          post: {
+            id: number
+            slug: string
+            title: string
+            excerpt: string | null
+            body: string
+            author_id: number
+            created_at: string
+          }
+          author: {
+            id: number
+            name: string
+            avatar_url: string | null
+            bio: string | null
+            created_at: string
+          }
+          comments: Array<{
+            id: number
+            post_id: number
+            author_name: string
+            body: string
+            created_at: string
+          }>
+        }>('posts.getWithComments', { slug }),
+    },
     comments: {
-      get: async (slug: string) => {
-        const result = await call<{ data: Array<{
-          id: number;
-          author: string;
-          body: string;
-          post_slug: string;
-          created_at: string;
-        }> }>('comments.get', { slug });
-        return result.data;
-      },
       create: (slug: string, author: string, body: string) => 
         call<{ success: boolean; id: number }>('comments.create', { slug, author, body }),
     },
