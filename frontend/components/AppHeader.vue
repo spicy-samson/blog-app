@@ -34,9 +34,6 @@
 </template>
 
 <script setup lang="ts">
-import { useColorMode } from '#imports'
-import { computed } from 'vue'
-
 const colorMode = useColorMode()
 
 const isDark = computed(() => colorMode.value === 'dark')
